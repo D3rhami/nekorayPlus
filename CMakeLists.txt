@@ -162,6 +162,8 @@ set(PROJECT_SOURCES
 
         ui/ThemeManager.cpp
         ui/Icon.cpp
+        ui/AccessibleFilter.cpp
+        ui/AccessibleFilter.hpp
 
         ui/mainwindow_grpc.cpp
         ui/mainwindow.cpp

@@ -16,6 +16,7 @@
 #include "ui/dialog_manage_routes.h"
 #include "ui/dialog_vpn_settings.h"
 #include "ui/dialog_hotkey.h"
+#include "ui/AccessibleFilter.hpp"
 
 #include "3rdparty/fix_old_qt.h"
 #include "3rdparty/qrcodegen.hpp"
@@ -101,9 +102,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->toolButton_server->setMenu(ui->menu_server);
     ui->menubar->setVisible(false);
     connect(ui->toolButton_document, &QToolButton::clicked, this, [=] { QDesktopServices::openUrl(QUrl("https://matsuridayo.github.io/")); });
-    connect(ui->toolButton_ads, &QToolButton::clicked, this, [=] { QDesktopServices::openUrl(QUrl("https://neko-box.pages.dev/喵")); });
     connect(ui->toolButton_update, &QToolButton::clicked, this, [=] { runOnNewThread([=] { CheckUpdate(); }); });
     connect(ui->toolButton_url_test, &QToolButton::clicked, this, [=] { speedtest_current_group(1, true); });
+
+    accessible_filter = new AccessibleFilterController(
+        ui->toolButton_af_exclude, ui->pushButton_af_apply,
+        [this](const QString &msg) { show_log_impl(msg); }, [this] { refresh_proxy_list(); }, this);
+    accessible_filter->refreshForCurrentGroup();
 
     // Setup log UI
     ui->splitter->restoreState(DecodeB64IfValid(NekoGui::dataStore->splitter_state));
@@ -509,6 +514,7 @@ void MainWindow::show_group(int gid) {
     GroupSortAction gsa;
     gsa.scroll_to_started = true;
     refresh_proxy_list_impl(-1, gsa);
+    if (accessible_filter != nullptr) accessible_filter->refreshForCurrentGroup();
 
     NekoGui::dataStore->refreshing_group = false;
 }
@@ -1075,6 +1081,8 @@ void MainWindow::refresh_proxy_list_impl_refresh_data(const int &id) {
         f->setText(profile->traffic_data->DisplayTraffic());
         ui->proxyListTable->setItem(row, 4, f);
     }
+
+    if (id < 0 && accessible_filter != nullptr) accessible_filter->refreshForCurrentGroup();
 }
 
 // table菜单相关

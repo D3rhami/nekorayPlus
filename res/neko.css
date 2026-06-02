@@ -1,3 +1,63 @@
 QMessageBox {
     messagebox-text-interaction-flags: 5;
 }
+
+QFrame#frame_accessible_filter {
+    background-color: palette(window);
+    border: 1px solid palette(mid);
+    border-radius: 6px;
+    margin: 2px 0;
+}
+
+QFrame#frame_accessible_filter QLabel {
+    color: palette(windowText);
+    background: transparent;
+}
+
+QToolButton#toolButton_af_exclude {
+    color: palette(buttonText);
+    background-color: palette(button);
+    border: 1px solid palette(mid);
+    border-radius: 4px;
+    padding: 2px 8px;
+    min-height: 20px;
+}
+
+QToolButton#toolButton_af_exclude:hover {
+    color: palette(buttonText);
+    background-color: palette(light);
+    border-color: palette(dark);
+}
+
+QToolButton#toolButton_af_exclude:disabled {
+    color: palette(mid);
+    background-color: palette(window);
+    border-color: palette(mid);
+}
+
+QPushButton#pushButton_af_apply {
+    color: palette(buttonText);
+    background-color: palette(button);
+    border: 1px solid palette(mid);
+    border-radius: 4px;
+    padding: 2px 8px;
+    min-height: 20px;
+}
+
+QPushButton#pushButton_af_apply:hover {
+    color: palette(buttonText);
+    background-color: palette(light);
+    border-color: palette(dark);
+}
+
+QPushButton#pushButton_af_apply:pressed {
+    color: palette(buttonText);
+    background-color: palette(mid);
+    border-color: palette(dark);
+}
+
+QPushButton#pushButton_af_apply:disabled {
+    color: palette(mid);
+    background-color: palette(window);
+    border-color: palette(mid);
+}

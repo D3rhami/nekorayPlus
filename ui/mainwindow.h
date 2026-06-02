@@ -33,6 +33,8 @@ namespace Ui {
 }
 QT_END_NAMESPACE
 
+class AccessibleFilterController;
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -160,6 +162,8 @@ private:
     QMutex mu_exit;
     QSemaphore sem_stopped;
     int exit_reason = 0;
+
+    class AccessibleFilterController *accessible_filter = nullptr;
 
     QList<std::shared_ptr<NekoGui::ProxyEntity>> get_now_selected_list();
 

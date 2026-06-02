@@ -85,3 +85,7 @@ CMakeLists.txt.user*
 
 .vs
 out
+
+# Local agent build helpers, scripts, and notes (not for commit)
+/dev_env/
+/nekobox.lnk
