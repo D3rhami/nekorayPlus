@@ -161,6 +161,7 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                     if (mode == libcore::TestMode::UrlTest || mode == libcore::FullTest) {
                         auto c = BuildConfig(profile, true, false);
                         if (!c->error.isEmpty()) {
+                            profile->latency = -1;
                             profile->full_test_report = c->error;
                             profile->Save();
                             auto profileId = profile->id;
@@ -212,7 +213,15 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                         extSem.acquire();
                     }
                     //
-                    if (!rpcOK) return;
+                    if (!rpcOK) {
+                        profile->latency = -1;
+                        profile->Save();
+                        auto profileId = profile->id;
+                        runOnUiThread([this, profileId] {
+                            refresh_proxy_list(profileId);
+                        });
+                        continue;
+                    }
 
                     if (result.error().empty()) {
                         profile->latency = result.ms();

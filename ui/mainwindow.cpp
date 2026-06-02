@@ -1411,10 +1411,12 @@ void MainWindow::on_menu_update_subscription_triggered() {
 }
 
 void MainWindow::on_menu_remove_unavailable_triggered() {
-    QList<std::shared_ptr<NekoGui::ProxyEntity>> out_del;
+    auto group = NekoGui::profileManager->CurrentGroup();
+    if (group == nullptr) return;
 
+    QList<std::shared_ptr<NekoGui::ProxyEntity>> out_del;
     for (const auto &[_, profile]: NekoGui::profileManager->profiles) {
-        if (NekoGui::dataStore->current_group != profile->gid) continue;
+        if (profile->gid != group->id) continue;
         if (profile->latency < 0) out_del += profile;
     }
 
@@ -1431,9 +1433,15 @@ void MainWindow::on_menu_remove_unavailable_triggered() {
     if (out_del.length() > 0 &&
         QMessageBox::question(this, tr("Confirmation"), tr("Remove %1 item(s) ?").arg(out_del.length()) + "\n" + remove_display) == QMessageBox::StandardButton::Yes) {
         for (const auto &ent: out_del) {
+            group->order.removeAll(ent->id);
             NekoGui::profileManager->DeleteProfile(ent->id);
         }
+        if (!out_del.isEmpty()) {
+            group->Save();
+            NekoGui::profileManager->SaveManager();
+        }
         refresh_proxy_list();
+        if (accessible_filter != nullptr) accessible_filter->refreshForCurrentGroup();
     }
 }
 

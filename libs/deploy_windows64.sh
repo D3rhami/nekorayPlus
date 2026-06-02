@@ -22,5 +22,11 @@ fi
 
 popd
 
+#### geo + public assets (required for URL test / routing) ####
+if [ -d "$DEPLOYMENT/public_res" ]; then
+  cp -f $DEPLOYMENT/public_res/*.db $DEST/ 2>/dev/null || true
+  cp -f $DEPLOYMENT/public_res/*.dat $DEST/ 2>/dev/null || true
+fi
+
 #### prepare deployment ####
 cp $BUILD/*.pdb $DEPLOYMENT
