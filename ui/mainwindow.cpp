@@ -578,6 +578,16 @@ void MainWindow::dialog_message_impl(const QString &sender, const QString &info)
         }
     } else if (sender == "SubUpdater") {
         if (info.startsWith("finish")) {
+            if (info.contains("dingyue") && NekoGui::dataStore->sub_dedupe_after_update) {
+                const auto parts = info.split(",");
+                if (parts.size() >= 2) {
+                    const int gid = parts[1].toInt();
+                    const int removed = NekoGui::profileManager->RemoveDuplicateProfiles(gid);
+                    if (removed > 0) {
+                        show_log_impl(tr("Removed %1 duplicate profile(s).").arg(removed));
+                    }
+                }
+            }
             refresh_proxy_list();
             if (!info.contains("dingyue")) {
                 show_log_impl(tr("Imported %1 profile(s)").arg(NekoGui::dataStore->imported_count));
@@ -1368,11 +1378,10 @@ void MainWindow::on_menu_select_all_triggered() {
 }
 
 void MainWindow::on_menu_delete_repeat_triggered() {
-    QList<std::shared_ptr<NekoGui::ProxyEntity>> out;
-    QList<std::shared_ptr<NekoGui::ProxyEntity>> out_del;
+    auto group = NekoGui::profileManager->CurrentGroup();
+    if (group == nullptr) return;
 
-    NekoGui::ProfileFilter::Uniq(NekoGui::profileManager->CurrentGroup()->Profiles(), out, true, false);
-    NekoGui::ProfileFilter::OnlyInSrc_ByPointer(NekoGui::profileManager->CurrentGroup()->Profiles(), out, out_del);
+    const auto out_del = NekoGui::profileManager->GetDuplicateProfiles(group->id);
 
     int remove_display_count = 0;
     QString remove_display;
@@ -1386,9 +1395,7 @@ void MainWindow::on_menu_delete_repeat_triggered() {
 
     if (out_del.length() > 0 &&
         QMessageBox::question(this, tr("Confirmation"), tr("Remove %1 item(s) ?").arg(out_del.length()) + "\n" + remove_display) == QMessageBox::StandardButton::Yes) {
-        for (const auto &ent: out_del) {
-            NekoGui::profileManager->DeleteProfile(ent->id);
-        }
+        NekoGui::profileManager->RemoveDuplicateProfiles(group->id);
         refresh_proxy_list();
     }
 }

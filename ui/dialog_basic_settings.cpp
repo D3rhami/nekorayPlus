@@ -150,6 +150,7 @@ DialogBasicSettings::DialogBasicSettings(QWidget *parent)
     D_LOAD_BOOL(sub_use_proxy)
     D_LOAD_BOOL(sub_clear)
     D_LOAD_BOOL(sub_insecure)
+    D_LOAD_BOOL(sub_dedupe_after_update)
     D_LOAD_INT_ENABLE(sub_auto_update, sub_auto_update_enable)
 
     // Core
@@ -263,6 +264,7 @@ void DialogBasicSettings::accept() {
     D_SAVE_BOOL(sub_use_proxy)
     D_SAVE_BOOL(sub_clear)
     D_SAVE_BOOL(sub_insecure)
+    D_SAVE_BOOL(sub_dedupe_after_update)
     D_SAVE_INT_ENABLE(sub_auto_update, sub_auto_update_enable)
 
     // Core

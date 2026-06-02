@@ -612,7 +612,7 @@ namespace NekoGui_sub {
             }
 
             MW_show_log("<<<<<<<< " + QObject::tr("Change of %1:").arg(group->name) + "\n" + change_text);
-            MW_dialog_message("SubUpdater", "finish-dingyue");
+            MW_dialog_message("SubUpdater", "finish-dingyue," + Int2String(group->id));
         } else {
             NekoGui::dataStore->imported_count = rawUpdater->updated_order.count();
             MW_dialog_message("SubUpdater", "finish");

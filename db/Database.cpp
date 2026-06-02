@@ -1,5 +1,6 @@
 #include "Database.hpp"
 
+#include "ProfileFilter.hpp"
 #include "fmt/includes.h"
 
 #include <QFile>
@@ -368,6 +369,34 @@ namespace NekoGui {
 
     std::shared_ptr<Group> ProfileManager::CurrentGroup() {
         return GetGroup(dataStore->current_group);
+    }
+
+    QList<std::shared_ptr<ProxyEntity>> ProfileManager::GetDuplicateProfiles(int gid) {
+        QList<std::shared_ptr<ProxyEntity>> out_del;
+        auto group = GetGroup(gid);
+        if (group == nullptr) return out_del;
+        QList<std::shared_ptr<ProxyEntity>> uniq;
+        ProfileFilter::Uniq(group->Profiles(), uniq, false, false);
+        ProfileFilter::OnlyInSrc_ByPointer(group->Profiles(), uniq, out_del);
+        return out_del;
+    }
+
+    int ProfileManager::RemoveDuplicateProfiles(int gid) {
+        auto group = GetGroup(gid);
+        if (group == nullptr) return 0;
+        const auto to_del = GetDuplicateProfiles(gid);
+        int n = 0;
+        for (const auto &ent: to_del) {
+            if (dataStore->started_id == ent->id) continue;
+            group->order.removeAll(ent->id);
+            DeleteProfile(ent->id);
+            n++;
+        }
+        if (n > 0) {
+            group->Save();
+            SaveManager();
+        }
+        return n;
     }
 
     QList<std::shared_ptr<ProxyEntity>> Group::Profiles() const {

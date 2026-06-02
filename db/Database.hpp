@@ -44,6 +44,10 @@ namespace NekoGui {
 
         std::shared_ptr<Group> CurrentGroup();
 
+        [[nodiscard]] QList<std::shared_ptr<ProxyEntity>> GetDuplicateProfiles(int gid);
+
+        int RemoveDuplicateProfiles(int gid);
+
     private:
         // sort by id
         QList<int> profilesIdOrder;

@@ -121,6 +121,7 @@ namespace NekoGui {
         bool sub_use_proxy = false;
         bool sub_clear = false;
         bool sub_insecure = false;
+        bool sub_dedupe_after_update = false;
         int sub_auto_update = -30;
 
         // Security
