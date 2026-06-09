@@ -1,0 +1,174 @@
+name: Release nekorayPlus (Windows)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v4.0.1-plus1)"
+        required: true
+      publish:
+        description: "Skip GitHub release upload (set to y to skip)"
+        required: false
+        default: ""
+
+jobs:
+  build-go:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Go status hash
+        run: git ls-files go | xargs cat | sha1sum > go_status
+
+      - name: Cache Go build
+        id: cache-go
+        uses: actions/cache@v4
+        with:
+          path: artifacts-go.tgz
+          key: NekorayPlus-Go-${{ hashFiles('libs/*.sh', 'go_status', '*.txt') }}
+
+      - name: Install Go
+        if: steps.cache-go.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.22
+
+      - name: Build Go core + public assets
+        if: steps.cache-go.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          ./libs/get_source.sh
+          GOOS=windows GOARCH=amd64 ./libs/build_go.sh
+          ./libs/build_public_res.sh
+          tar czvf artifacts-go.tgz ./deployment
+
+      - name: Upload Go artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nekorayPlus-go-${{ github.sha }}
+          path: artifacts-go.tgz
+
+  build-windows:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          toolset: 14.2
+          arch: x64
+
+      - name: Download Qt SDK
+        shell: bash
+        env:
+          DL_QT_VER: "6.7"
+        run: bash ./libs/download_qtsdk_win.sh
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v3
+
+      - name: Cache C++ deps
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: libs/deps
+          key: NekorayPlus-Deps-windows-x64-Qt6.7-${{ hashFiles('libs/build_deps_*.sh') }}
+
+      - name: Build C++ deps
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./libs/build_deps_all.sh
+
+      - name: Build GUI
+        shell: bash
+        env:
+          DL_QT_VER: "6.7"
+          CC: cl.exe
+          CXX: cl.exe
+        run: |
+          source libs/env_qtsdk.sh "$PWD/qtsdk/Qt"
+          mkdir -p build
+          cd build
+          cmake -GNinja -DQT_VERSION_MAJOR=6 -DCMAKE_BUILD_TYPE=Release ..
+          ninja -j2
+          cd ..
+          ./libs/deploy_windows64.sh
+
+      - name: Rename GUI to nekorayPlus.exe
+        shell: bash
+        run: |
+          cd deployment/windows64
+          mv nekobox.exe nekorayPlus.exe
+
+      - name: Pack Windows artifact
+        shell: bash
+        run: tar czvf artifacts-windows.tgz ./deployment
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nekorayPlus-windows-${{ github.sha }}
+          path: artifacts-windows.tgz
+
+  release:
+    name: Pack and publish release
+    runs-on: ubuntu-latest
+    needs:
+      - build-go
+      - build-windows
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: download-artifact
+
+      - name: Merge deployment folders
+        shell: bash
+        run: |
+          find download-artifact -name artifacts-go.tgz -exec tar xzvf {} \;
+          mkdir -p /tmp/nekorayplus-core
+          cp -f deployment/windows64/nekobox_core.exe /tmp/nekorayplus-core/
+          cp -f deployment/windows64/updater.exe /tmp/nekorayplus-core/ 2>/dev/null || true
+          find download-artifact -name artifacts-windows.tgz -exec tar xzvf {} \;
+          cp -f /tmp/nekorayplus-core/nekobox_core.exe deployment/windows64/
+          cp -f /tmp/nekorayplus-core/updater.exe deployment/windows64/ 2>/dev/null || true
+          cp -f deployment/public_res/* deployment/windows64/ 2>/dev/null || true
+          rm -rf deployment/public_res deployment/*.pdb /tmp/nekorayplus-core
+
+      - name: Create release zip
+        shell: bash
+        run: |
+          source libs/env_deploy.sh
+          version_plus="nekorayPlus-$(cat nekoray_version.txt)"
+          cd deployment
+          mv windows64 nekorayPlus
+          zip -r "../${version_plus}-windows64.zip" nekorayPlus
+          rm -rf nekorayPlus
+          ls -lh ../*.zip
+
+      - name: Upload release bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nekorayPlus-release-${{ github.sha }}
+          path: |
+            deployment
+            nekorayPlus-*-windows64.zip
+
+      - name: Create GitHub Release
+        if: github.event.inputs.publish != 'y'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: nekorayPlus ${{ github.event.inputs.tag }}
+          generate_release_notes: true
+          files: nekorayPlus-*-windows64.zip
