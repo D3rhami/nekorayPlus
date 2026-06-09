@@ -18,7 +18,8 @@ QFrame#frame_hide_unavailable QLabel {
     background: transparent;
 }
 
-QToolButton#toolButton_af_exclude {
+QToolButton#toolButton_af_exclude,
+QToolButton#toolButton_country_filter {
     color: palette(buttonText);
     background-color: palette(button);
     border: 1px solid palette(mid);
@@ -27,20 +28,23 @@ QToolButton#toolButton_af_exclude {
     min-height: 20px;
 }
 
-QToolButton#toolButton_af_exclude:hover {
+QToolButton#toolButton_af_exclude:hover,
+QToolButton#toolButton_country_filter:hover {
     color: palette(buttonText);
     background-color: palette(light);
     border-color: palette(dark);
 }
 
-QToolButton#toolButton_af_exclude:disabled {
+QToolButton#toolButton_af_exclude:disabled,
+QToolButton#toolButton_country_filter:disabled {
     color: palette(mid);
     background-color: palette(window);
     border-color: palette(mid);
 }
 
 QPushButton#pushButton_af_apply,
-QPushButton#pushButton_reset_country_apply {
+QPushButton#pushButton_country_filter,
+QPushButton#pushButton_country_clear_tags {
     color: palette(buttonText);
     background-color: palette(button);
     border: 1px solid palette(mid);
@@ -50,21 +54,24 @@ QPushButton#pushButton_reset_country_apply {
 }
 
 QPushButton#pushButton_af_apply:hover,
-QPushButton#pushButton_reset_country_apply:hover {
+QPushButton#pushButton_country_filter:hover,
+QPushButton#pushButton_country_clear_tags:hover {
     color: palette(buttonText);
     background-color: palette(light);
     border-color: palette(dark);
 }
 
 QPushButton#pushButton_af_apply:pressed,
-QPushButton#pushButton_reset_country_apply:pressed {
+QPushButton#pushButton_country_filter:pressed,
+QPushButton#pushButton_country_clear_tags:pressed {
     color: palette(buttonText);
     background-color: palette(mid);
     border-color: palette(dark);
 }
 
 QPushButton#pushButton_af_apply:disabled,
-QPushButton#pushButton_reset_country_apply:disabled {
+QPushButton#pushButton_country_filter:disabled,
+QPushButton#pushButton_country_clear_tags:disabled {
     color: palette(mid);
     background-color: palette(window);
     border-color: palette(mid);

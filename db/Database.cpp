@@ -226,7 +226,7 @@ namespace NekoGui {
         }
     };
 
-    static QString CountryNameForIsoCode(const QString &isoCode) {
+    QString ProxyEntity::CountryNameForIsoCode(const QString &isoCode) {
         if (isoCode.size() != 2) return {};
 #if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
         const auto territory = QLocale::codeToTerritory(isoCode);
@@ -235,6 +235,12 @@ namespace NekoGui {
 #else
         return isoCode;
 #endif
+    }
+
+    QString ProxyEntity::CountryLabel(const ProxyEntity &profile) {
+        if (profile.exit_country.isEmpty()) return QObject::tr("Unknown");
+        const auto name = CountryNameForIsoCode(profile.exit_country);
+        return name.isEmpty() ? profile.exit_country : name;
     }
 
     bool ProxyEntity::IsUnavailable(const ProxyEntity &profile) {
@@ -246,12 +252,23 @@ namespace NekoGui {
         return !IsUnavailable(profile);
     }
 
+    bool ProxyEntity::MatchesCountryFilter(const ProxyEntity &profile) {
+        if (!NekoGui::dataStore->country_filter_active || NekoGui::dataStore->country_filter_selected.isEmpty()) {
+            return true;
+        }
+        return NekoGui::dataStore->country_filter_selected.contains(CountryLabel(profile));
+    }
+
+    bool ProxyEntity::IsShownInList(const ProxyEntity &profile) {
+        if (!IsVisibleInList(profile)) return false;
+        return MatchesCountryFilter(profile);
+    }
+
     QList<std::shared_ptr<ProxyEntity>> ProxyEntity::VisibleOnly(const QList<std::shared_ptr<ProxyEntity>> &profiles) {
-        if (!NekoGui::dataStore->hide_unavailable) return profiles;
         QList<std::shared_ptr<ProxyEntity>> out;
         out.reserve(profiles.size());
         for (const auto &profile: profiles) {
-            if (IsVisibleInList(*profile)) out += profile;
+            if (IsShownInList(*profile)) out += profile;
         }
         return out;
     }

@@ -116,6 +116,8 @@ namespace NekoGui {
         int max_log_line = 200;
         QString splitter_state = "";
         bool hide_unavailable = false;
+        bool country_filter_active = false;
+        QStringList country_filter_selected = {};
 
         // Subscription
         QString user_agent = ""; // set at main.cpp

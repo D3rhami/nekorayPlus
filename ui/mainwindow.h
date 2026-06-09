@@ -164,6 +164,7 @@ private:
     int exit_reason = 0;
 
     class AccessibleFilterController *accessible_filter = nullptr;
+    class CountryFilterController *country_filter = nullptr;
 
     QList<std::shared_ptr<NekoGui::ProxyEntity>> get_now_selected_list();
 

@@ -46,6 +46,14 @@ namespace NekoGui {
 
         [[nodiscard]] static bool IsVisibleInList(const ProxyEntity &profile);
 
+        [[nodiscard]] static bool MatchesCountryFilter(const ProxyEntity &profile);
+
+        [[nodiscard]] static bool IsShownInList(const ProxyEntity &profile);
+
+        [[nodiscard]] static QString CountryNameForIsoCode(const QString &isoCode);
+
+        [[nodiscard]] static QString CountryLabel(const ProxyEntity &profile);
+
         static QList<std::shared_ptr<ProxyEntity>> VisibleOnly(const QList<std::shared_ptr<ProxyEntity>> &profiles);
 
         [[nodiscard]] QString DisplayLatency() const;

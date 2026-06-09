@@ -17,6 +17,7 @@
 #include "ui/dialog_vpn_settings.h"
 #include "ui/dialog_hotkey.h"
 #include "ui/AccessibleFilter.hpp"
+#include "ui/CountryFilter.hpp"
 
 #include "3rdparty/fix_old_qt.h"
 #include "3rdparty/qrcodegen.hpp"
@@ -110,28 +111,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         [this](const QString &msg) { show_log_impl(msg); }, [this] { refresh_proxy_list(); }, this);
     accessible_filter->refreshForCurrentGroup();
 
+    country_filter = new CountryFilterController(
+        ui->toolButton_country_filter, ui->pushButton_country_filter, ui->pushButton_country_clear_tags,
+        [this](const QString &msg) { show_log_impl(msg); }, [this] { refresh_proxy_list(); }, this);
+    country_filter->refreshForCurrentGroup();
+
     ui->checkBox_hide_unavailable->setChecked(NekoGui::dataStore->hide_unavailable);
     connect(ui->checkBox_hide_unavailable, &QCheckBox::toggled, this, [this](bool checked) {
         NekoGui::dataStore->hide_unavailable = checked;
         NekoGui::dataStore->Save();
         refresh_proxy_list();
         if (accessible_filter != nullptr) accessible_filter->refreshForCurrentGroup();
-    });
-
-    connect(ui->pushButton_reset_country_apply, &QPushButton::clicked, this, [this] {
-        auto group = NekoGui::profileManager->CurrentGroup();
-        if (group == nullptr) return;
-        int cleared = 0;
-        for (const auto &profile: NekoGui::ProxyEntity::VisibleOnly(group->Profiles())) {
-            if (profile->exit_country.isEmpty()) continue;
-            profile->exit_country.clear();
-            profile->Save();
-            cleared++;
-        }
-        if (cleared > 0) {
-            refresh_proxy_list();
-            MW_show_log(tr("[reset country] Cleared country from %1 profile(s).").arg(cleared));
-        }
     });
 
     // Setup log UI
@@ -539,6 +529,7 @@ void MainWindow::show_group(int gid) {
     gsa.scroll_to_started = true;
     refresh_proxy_list_impl(-1, gsa);
     if (accessible_filter != nullptr) accessible_filter->refreshForCurrentGroup();
+    if (country_filter != nullptr) country_filter->refreshForCurrentGroup();
 
     NekoGui::dataStore->refreshing_group = false;
 }
@@ -980,7 +971,7 @@ void MainWindow::refresh_proxy_list_impl(const int &id, GroupSortAction groupSor
     if (id >= 0) {
         auto profile = NekoGui::profileManager->GetProfile(id);
         if (profile != nullptr) {
-            const bool visible = NekoGui::ProxyEntity::IsVisibleInList(*profile);
+            const bool visible = NekoGui::ProxyEntity::IsShownInList(*profile);
             const bool inTable = ui->proxyListTable->row2Id.contains(id);
             if (visible != inTable) {
                 refresh_proxy_list_impl(-1, groupSortAction);
@@ -998,23 +989,21 @@ void MainWindow::refresh_proxy_list_impl(const int &id, GroupSortAction groupSor
         auto group = NekoGui::profileManager->CurrentGroup();
         QList<int> visibleIds;
         if (group != nullptr) {
-            if (NekoGui::dataStore->hide_unavailable) {
-                for (const auto &[pid, profile]: NekoGui::profileManager->profiles) {
-                    if (profile->gid != group->id) continue;
-                    if (!NekoGui::ProxyEntity::IsVisibleInList(*profile)) {
-                        ui->proxyListTable->keep_in_order_ids.insert(pid);
-                    }
+            for (const auto &[pid, profile]: NekoGui::profileManager->profiles) {
+                if (profile->gid != group->id) continue;
+                if (!NekoGui::ProxyEntity::IsShownInList(*profile)) {
+                    ui->proxyListTable->keep_in_order_ids.insert(pid);
                 }
             }
             for (auto pid: group->order) {
                 auto profile = NekoGui::profileManager->GetProfile(pid);
                 if (profile == nullptr || profile->gid != group->id) continue;
-                if (!NekoGui::ProxyEntity::IsVisibleInList(*profile)) continue;
+                if (!NekoGui::ProxyEntity::IsShownInList(*profile)) continue;
                 visibleIds += pid;
             }
             for (const auto &[pid, profile]: NekoGui::profileManager->profiles) {
                 if (profile->gid != group->id) continue;
-                if (!NekoGui::ProxyEntity::IsVisibleInList(*profile)) continue;
+                if (!NekoGui::ProxyEntity::IsShownInList(*profile)) continue;
                 if (visibleIds.contains(pid)) continue;
                 visibleIds += pid;
             }
@@ -1150,6 +1139,7 @@ void MainWindow::refresh_proxy_list_impl_refresh_data(const int &id) {
     }
 
     if (id < 0 && accessible_filter != nullptr) accessible_filter->refreshForCurrentGroup();
+    if (id < 0 && country_filter != nullptr) country_filter->updateCountryOptions();
 }
 
 // table菜单相关
@@ -1475,7 +1465,7 @@ void MainWindow::on_menu_remove_unavailable_triggered() {
     QList<std::shared_ptr<NekoGui::ProxyEntity>> out_del;
     for (const auto &[_, profile]: NekoGui::profileManager->profiles) {
         if (profile->gid != group->id) continue;
-        if (!NekoGui::ProxyEntity::IsVisibleInList(*profile)) continue;
+        if (!NekoGui::ProxyEntity::IsShownInList(*profile)) continue;
         if (profile->latency < 0) out_del += profile;
     }
 
@@ -1501,6 +1491,7 @@ void MainWindow::on_menu_remove_unavailable_triggered() {
         }
         refresh_proxy_list();
         if (accessible_filter != nullptr) accessible_filter->refreshForCurrentGroup();
+        if (country_filter != nullptr) country_filter->updateCountryOptions();
     }
 }
 

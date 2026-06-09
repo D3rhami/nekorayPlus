@@ -164,6 +164,8 @@ set(PROJECT_SOURCES
         ui/Icon.cpp
         ui/AccessibleFilter.cpp
         ui/AccessibleFilter.hpp
+        ui/CountryFilter.cpp
+        ui/CountryFilter.hpp
 
         ui/mainwindow_grpc.cpp
         ui/mainwindow.cpp
