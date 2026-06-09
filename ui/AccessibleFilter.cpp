@@ -112,7 +112,7 @@ void AccessibleFilterController::refreshForCurrentGroup() {
 
     QSet<QString> types;
     if (auto group = NekoGui::profileManager->CurrentGroup(); group != nullptr) {
-        const auto profiles = group->Profiles();
+        const auto profiles = NekoGui::ProxyEntity::VisibleOnly(group->Profiles());
         for (const auto &profile: profiles) {
             const auto label = profileTypeLabel(profile);
             if (!label.isEmpty()) types.insert(label);
@@ -146,14 +146,14 @@ void AccessibleFilterController::apply() {
         return;
     }
 
-    if (group->Profiles().isEmpty()) {
+    if (NekoGui::ProxyEntity::VisibleOnly(group->Profiles()).isEmpty()) {
         logNothingToApply(tr("group is empty"));
         resetSelection();
         refreshForCurrentGroup();
         return;
     }
 
-    const auto profiles = group->Profiles();
+    const auto profiles = NekoGui::ProxyEntity::VisibleOnly(group->Profiles());
     QList<std::shared_ptr<NekoGui::ProxyEntity>> to_remove;
     to_remove.reserve(profiles.size());
     for (const auto &profile: profiles) {

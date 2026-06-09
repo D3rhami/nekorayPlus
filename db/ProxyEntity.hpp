@@ -42,6 +42,12 @@ namespace NekoGui {
 
         void ApplyTestResult(bool isUrlTest, int ms, bool rpcOk, bool hasError, const QString &fullReport);
 
+        [[nodiscard]] static bool IsUnavailable(const ProxyEntity &profile);
+
+        [[nodiscard]] static bool IsVisibleInList(const ProxyEntity &profile);
+
+        static QList<std::shared_ptr<ProxyEntity>> VisibleOnly(const QList<std::shared_ptr<ProxyEntity>> &profiles);
+
         [[nodiscard]] QString DisplayLatency() const;
 
         [[nodiscard]] QColor DisplayLatencyColor() const;

@@ -237,6 +237,25 @@ namespace NekoGui {
 #endif
     }
 
+    bool ProxyEntity::IsUnavailable(const ProxyEntity &profile) {
+        return profile.latency < 0;
+    }
+
+    bool ProxyEntity::IsVisibleInList(const ProxyEntity &profile) {
+        if (!NekoGui::dataStore->hide_unavailable) return true;
+        return !IsUnavailable(profile);
+    }
+
+    QList<std::shared_ptr<ProxyEntity>> ProxyEntity::VisibleOnly(const QList<std::shared_ptr<ProxyEntity>> &profiles) {
+        if (!NekoGui::dataStore->hide_unavailable) return profiles;
+        QList<std::shared_ptr<ProxyEntity>> out;
+        out.reserve(profiles.size());
+        for (const auto &profile: profiles) {
+            if (IsVisibleInList(*profile)) out += profile;
+        }
+        return out;
+    }
+
     QString ProxyEntity::DisplayNameInList() const {
         if (latency < 0) {
             return QStringLiteral("[ - ] %1").arg(bean->name);
@@ -419,9 +438,10 @@ namespace NekoGui {
         QList<std::shared_ptr<ProxyEntity>> out_del;
         auto group = GetGroup(gid);
         if (group == nullptr) return out_del;
+        const auto profiles = ProxyEntity::VisibleOnly(group->Profiles());
         QList<std::shared_ptr<ProxyEntity>> uniq;
-        ProfileFilter::Uniq(group->Profiles(), uniq, false, false);
-        ProfileFilter::OnlyInSrc_ByPointer(group->Profiles(), uniq, out_del);
+        ProfileFilter::Uniq(profiles, uniq, false, false);
+        ProfileFilter::OnlyInSrc_ByPointer(profiles, uniq, out_del);
         return out_del;
     }
 

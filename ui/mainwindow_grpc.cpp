@@ -65,7 +65,7 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
     }
 
     auto profiles = get_selected_or_group();
-    if (test_group) profiles = NekoGui::profileManager->CurrentGroup()->ProfilesWithOrder();
+    if (test_group) profiles = NekoGui::ProxyEntity::VisibleOnly(NekoGui::profileManager->CurrentGroup()->ProfilesWithOrder());
     if (profiles.isEmpty()) return;
     auto group = NekoGui::profileManager->CurrentGroup();
     if (group->archive) return;

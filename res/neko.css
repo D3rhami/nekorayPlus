@@ -3,7 +3,8 @@ QMessageBox {
 }
 
 QFrame#frame_accessible_filter,
-QFrame#frame_reset_country {
+QFrame#frame_reset_country,
+QFrame#frame_hide_unavailable {
     background-color: palette(window);
     border: 1px solid palette(mid);
     border-radius: 6px;
@@ -11,7 +12,8 @@ QFrame#frame_reset_country {
 }
 
 QFrame#frame_accessible_filter QLabel,
-QFrame#frame_reset_country QLabel {
+QFrame#frame_reset_country QLabel,
+QFrame#frame_hide_unavailable QLabel {
     color: palette(windowText);
     background: transparent;
 }

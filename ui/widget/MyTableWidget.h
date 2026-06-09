@@ -4,6 +4,7 @@
 #include <QTableWidget>
 #include <QDropEvent>
 #include <QDebug>
+#include <QSet>
 #include <functional>
 #include <utility>
 
@@ -19,18 +20,39 @@ public:
     QList<int> order;          // id sorted (save)
     std::map<int, int> id2Row; // id2Row
     QList<int> row2Id;         // row2Id: use this to refresh data
+    QSet<int> keep_in_order_ids; // hidden from table but must stay in saved order
 
     std::function<void()> callback_save_order;
     std::function<void(int id)> refresh_data;
 
     void _save_order(bool saveToFile) {
-        order.clear();
+        QList<int> visibleOrder;
+        visibleOrder.reserve(this->rowCount());
         id2Row.clear();
         for (int i = 0; i < this->rowCount(); i++) {
             auto id = row2Id[i];
-            order += id;
+            visibleOrder += id;
             id2Row[id] = i;
         }
+
+        if (keep_in_order_ids.isEmpty()) {
+            order = visibleOrder;
+        } else {
+            QList<int> newOrder;
+            int visibleIdx = 0;
+            for (auto id: order) {
+                if (keep_in_order_ids.contains(id)) {
+                    newOrder += id;
+                } else if (visibleIdx < visibleOrder.size()) {
+                    newOrder += visibleOrder[visibleIdx++];
+                }
+            }
+            while (visibleIdx < visibleOrder.size()) {
+                newOrder += visibleOrder[visibleIdx++];
+            }
+            order = newOrder;
+        }
+
         if (callback_save_order != nullptr && saveToFile)
             callback_save_order();
     }
@@ -49,6 +71,7 @@ public:
             deleted_profiles.removeAll(id);
         }
         for (auto deleted_profile: deleted_profiles) {
+            if (keep_in_order_ids.contains(deleted_profile)) continue;
             needSave = true;
             order.removeAll(deleted_profile);
         }
