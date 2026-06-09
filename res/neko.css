@@ -2,14 +2,16 @@ QMessageBox {
     messagebox-text-interaction-flags: 5;
 }
 
-QFrame#frame_accessible_filter {
+QFrame#frame_accessible_filter,
+QFrame#frame_reset_country {
     background-color: palette(window);
     border: 1px solid palette(mid);
     border-radius: 6px;
     margin: 2px 0;
 }
 
-QFrame#frame_accessible_filter QLabel {
+QFrame#frame_accessible_filter QLabel,
+QFrame#frame_reset_country QLabel {
     color: palette(windowText);
     background: transparent;
 }
@@ -35,7 +37,8 @@ QToolButton#toolButton_af_exclude:disabled {
     border-color: palette(mid);
 }
 
-QPushButton#pushButton_af_apply {
+QPushButton#pushButton_af_apply,
+QPushButton#pushButton_reset_country_apply {
     color: palette(buttonText);
     background-color: palette(button);
     border: 1px solid palette(mid);
@@ -44,19 +47,22 @@ QPushButton#pushButton_af_apply {
     min-height: 20px;
 }
 
-QPushButton#pushButton_af_apply:hover {
+QPushButton#pushButton_af_apply:hover,
+QPushButton#pushButton_reset_country_apply:hover {
     color: palette(buttonText);
     background-color: palette(light);
     border-color: palette(dark);
 }
 
-QPushButton#pushButton_af_apply:pressed {
+QPushButton#pushButton_af_apply:pressed,
+QPushButton#pushButton_reset_country_apply:pressed {
     color: palette(buttonText);
     background-color: palette(mid);
     border-color: palette(dark);
 }
 
-QPushButton#pushButton_af_apply:disabled {
+QPushButton#pushButton_af_apply:disabled,
+QPushButton#pushButton_reset_country_apply:disabled {
     color: palette(mid);
     background-color: palette(window);
     border-color: palette(mid);

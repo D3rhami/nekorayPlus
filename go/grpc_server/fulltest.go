@@ -100,16 +100,16 @@ func DoFullTest(ctx context.Context, in *gen.TestReq, instance interface{}) (out
 		}
 	}
 
-	// 出口 IP
+	// 出口 IP (+ country from local geoip.db)
 	var out_ip string
 	if in.FullInOut {
-		resp, err := httpClient.Get("https://www.cloudflare.com/cdn-cgi/trace")
-		if err == nil {
-			b, _ := io.ReadAll(resp.Body)
-			out_ip = getBetweenStr(string(b), "ip=", "\n")
-			resp.Body.Close()
-		} else {
+		ip, country := FetchExitGeo(httpClient)
+		if ip == "" {
 			out_ip = "Error"
+		} else if country != "" {
+			out_ip = ip + " (" + country + ")"
+		} else {
+			out_ip = ip
 		}
 	}
 

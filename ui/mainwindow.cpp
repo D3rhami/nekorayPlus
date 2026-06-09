@@ -110,6 +110,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         [this](const QString &msg) { show_log_impl(msg); }, [this] { refresh_proxy_list(); }, this);
     accessible_filter->refreshForCurrentGroup();
 
+    connect(ui->pushButton_reset_country_apply, &QPushButton::clicked, this, [this] {
+        auto group = NekoGui::profileManager->CurrentGroup();
+        if (group == nullptr) return;
+        int cleared = 0;
+        for (const auto &profile: group->Profiles()) {
+            if (profile->exit_country.isEmpty()) continue;
+            profile->exit_country.clear();
+            profile->Save();
+            cleared++;
+        }
+        if (cleared > 0) {
+            refresh_proxy_list();
+            MW_show_log(tr("[reset country] Cleared country from %1 profile(s).").arg(cleared));
+        }
+    });
+
     // Setup log UI
     ui->splitter->restoreState(DecodeB64IfValid(NekoGui::dataStore->splitter_state));
     qvLogDocument->setUndoRedoEnabled(false);
@@ -1071,7 +1087,7 @@ void MainWindow::refresh_proxy_list_impl_refresh_data(const int &id) {
 
         // C2: Name
         f = f0->clone();
-        f->setText(profile->bean->name);
+        f->setText(profile->DisplayNameInList());
         if (isRunning) f->setForeground(palette().link());
         ui->proxyListTable->setItem(row, 2, f);
 
@@ -1364,6 +1380,7 @@ void MainWindow::on_menu_clear_test_result_triggered() {
     for (const auto &profile: get_selected_or_group()) {
         profile->latency = 0;
         profile->full_test_report = "";
+        profile->exit_country = "";
         profile->Save();
     }
     refresh_proxy_list();

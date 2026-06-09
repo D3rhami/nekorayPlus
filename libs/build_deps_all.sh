@@ -28,10 +28,12 @@ clean() {
 }
 
 #### ZXing v2.0.0 ####
+rm -rf zxing-*
 curl -L -o dl.zip https://github.com/nu-book/zxing-cpp/archive/refs/tags/v2.0.0.zip
-unzip dl.zip
+unzip -o dl.zip
 
 cd zxing-*
+rm -rf build
 mkdir -p build
 cd build
 
@@ -41,10 +43,12 @@ ninja && ninja install
 cd ../..
 
 #### yaml-cpp ####
+rm -rf yaml-*
 curl -L -o dl.zip https://github.com/jbeder/yaml-cpp/archive/refs/tags/yaml-cpp-0.7.0.zip
-unzip dl.zip
+unzip -o dl.zip
 
 cd yaml-*
+rm -rf build
 mkdir -p build
 cd build
 
@@ -54,10 +58,12 @@ ninja && ninja install
 cd ../..
 
 #### protobuf ####
+rm -rf protobuf
 git clone --recurse-submodules -b v21.4 --depth 1 --shallow-submodules https://github.com/protocolbuffers/protobuf
 
 #备注：交叉编译要在 host 也安装 protobuf 并且版本一致,编译安装，同参数，安装到 /usr/local
 
+rm -rf protobuf/build
 mkdir -p protobuf/build
 cd protobuf/build
 

@@ -113,8 +113,12 @@ func (s *server) Test(ctx context.Context, in *gen.TestReq) (out *gen.TestResp, 
 				return
 			}
 		}
-		// Latency
-		out.Ms, err = speedtest.UrlTest(boxapi.CreateProxyHttpClient(i), in.Url, in.Timeout, speedtest.UrlTestStandard_RTT)
+		httpClient := boxapi.CreateProxyHttpClient(i)
+		out.Ms, err = speedtest.UrlTest(httpClient, in.Url, in.Timeout, speedtest.UrlTestStandard_RTT)
+		if err == nil && out.Ms > 0 {
+			_, country := grpc_server.FetchExitGeo(httpClient)
+			out.FullReport = grpc_server.EncodeExitCountry(country)
+		}
 	} else if in.Mode == gen.TestMode_TcpPing {
 		out.Ms, err = speedtest.TcpPing(in.Address, in.Timeout)
 	} else if in.Mode == gen.TestMode_FullTest {

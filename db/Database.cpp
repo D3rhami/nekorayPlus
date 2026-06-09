@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QDir>
 #include <QColor>
+#include <QLocale>
 
 namespace NekoGui {
 
@@ -214,6 +215,7 @@ namespace NekoGui {
         _add(new configItem("gid", &gid, itemType::integer));
         _add(new configItem("yc", &latency, itemType::integer));
         _add(new configItem("report", &full_test_report, itemType::string));
+        _add(new configItem("exit_country", &exit_country, itemType::string));
 
         // 可以不关联 bean，只加载 ProxyEntity 的信息
         if (bean != nullptr) {
@@ -223,6 +225,48 @@ namespace NekoGui {
             _add(new configItem("traffic", dynamic_cast<JsonStore *>(traffic_data.get()), itemType::jsonStore));
         }
     };
+
+    static QString CountryNameForIsoCode(const QString &isoCode) {
+        if (isoCode.size() != 2) return {};
+#if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
+        const auto territory = QLocale::codeToTerritory(isoCode);
+        if (territory == QLocale::AnyTerritory) return isoCode;
+        return QLocale::territoryToString(territory);
+#else
+        return isoCode;
+#endif
+    }
+
+    QString ProxyEntity::DisplayNameInList() const {
+        if (latency < 0) {
+            return QStringLiteral("[ - ] %1").arg(bean->name);
+        }
+        if (!exit_country.isEmpty()) {
+            const auto country = CountryNameForIsoCode(exit_country);
+            if (!country.isEmpty()) {
+                return QStringLiteral("[%1] %2").arg(country, bean->name);
+            }
+        }
+        return bean->name;
+    }
+
+    void ProxyEntity::ApplyTestResult(bool isUrlTest, int ms, bool rpcOk, bool hasError, const QString &fullReport) {
+        if (!rpcOk || hasError) {
+            latency = -1;
+            return;
+        }
+        latency = ms > 0 ? ms : 1;
+        if (isUrlTest) {
+            full_test_report.clear();
+            exit_country.clear();
+            const auto prefix = QStringLiteral("__NKR_EXIT__|");
+            if (fullReport.startsWith(prefix)) {
+                exit_country = fullReport.mid(prefix.size());
+            }
+        } else {
+            full_test_report = fullReport;
+        }
+    }
 
     QString ProxyEntity::DisplayLatency() const {
         if (latency < 0) {
