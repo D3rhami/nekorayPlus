@@ -1,18 +1,29 @@
+# AUR CI — disabled for now; enable when ready to publish to Arch User Repository.
+#
+# Later setup:
+#   1. Create SSH key and add public key at https://aur.archlinux.org/account/
+#   2. Add private key as GitHub Actions secret: DEPLOY_KEY
+#   3. Remove `if: false` on the job below
+#   4. Run manually (workflow_dispatch) or restore push trigger on main
+#
+# See: https://aur.archlinux.org/
+
 name: AUR CI
+
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
-      - 'LICENSE'
-      - '!.github/workflows/**'
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: AUR package name
+        required: true
+        default: nekoray-git
 
 jobs:
   update:
+    if: false # TODO: enable after DEPLOY_KEY secret is configured
     runs-on: ubuntu-latest
     steps:
       - uses: chitang233/aur-pkgbuild-builder@main
         with:
           deploy_key: ${{ secrets.DEPLOY_KEY }}
-          package_name: 'nekoray-git'
+          package_name: ${{ github.event.inputs.package_name }}
