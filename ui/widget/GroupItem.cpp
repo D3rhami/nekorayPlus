@@ -63,7 +63,7 @@ GroupItem::~GroupItem() {
 void GroupItem::refresh_data() {
     ui->name->setText(ent->name);
 
-    auto type = ent->url.isEmpty() ? tr("Basic") : tr("Subscription");
+    auto type = ent->all_profiles ? tr("All") : (ent->url.isEmpty() ? tr("Basic") : tr("Subscription"));
     if (ent->archive) type = tr("Archive") + " " + type;
     type += " (" + Int2String(ent->Profiles().length()) + ")";
     ui->type->setText(type);
@@ -116,6 +116,7 @@ void GroupItem::on_edit_clicked() {
 }
 
 void GroupItem::on_remove_clicked() {
+    if (ent->all_profiles) return;
     if (NekoGui::profileManager->groups.size() <= 1) return;
     if (QMessageBox::question(this, tr("Confirmation"), tr("Remove %1?").arg(ent->name)) ==
         QMessageBox::StandardButton::Yes) {

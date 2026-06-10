@@ -28,9 +28,12 @@ public:
     void _save_order(bool saveToFile) {
         QList<int> visibleOrder;
         visibleOrder.reserve(this->rowCount());
+        QSet<int> seen;
         id2Row.clear();
         for (int i = 0; i < this->rowCount(); i++) {
             auto id = row2Id[i];
+            if (seen.contains(id)) continue;
+            seen.insert(id);
             visibleOrder += id;
             id2Row[id] = i;
         }

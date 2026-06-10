@@ -183,14 +183,17 @@ void AccessibleFilterController::apply() {
             detail += QStringLiteral("[!] %1 (running, skipped)\n").arg(ent->bean->DisplayTypeAndName());
             continue;
         }
-        group->order.removeAll(ent->id);
+        if (auto owner = NekoGui::profileManager->GetGroup(ent->gid); owner != nullptr) {
+            owner->order.removeAll(ent->id);
+            owner->Save();
+        }
         NekoGui::profileManager->DeleteProfile(ent->id);
         detail += QStringLiteral("[-] %1\n").arg(ent->bean->DisplayTypeAndName());
         removed++;
     }
 
     if (removed > 0) {
-        group->Save();
+        NekoGui::profileManager->RefreshAllProfilesGroup();
         NekoGui::profileManager->SaveManager();
         if (refresh_) refresh_();
     }

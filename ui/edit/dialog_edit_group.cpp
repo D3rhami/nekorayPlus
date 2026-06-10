@@ -31,6 +31,12 @@ DialogEditGroup::DialogEditGroup(const std::shared_ptr<NekoGui::Group> &ent, QWi
         if (!ent->Profiles().isEmpty()) {
             ui->cat_share->setVisible(true);
         }
+        if (ent->all_profiles) {
+            ui->cat_sub->hide();
+            ui->archive->setDisabled(true);
+            ui->skip_auto_update->setDisabled(true);
+            ui->cat_share->setVisible(true);
+        }
     } else { // new group
         ui->front_proxy->hide();
         ui->front_proxy_l->hide();
@@ -46,8 +52,7 @@ DialogEditGroup::DialogEditGroup(const std::shared_ptr<NekoGui::Group> &ent, QWi
 
     connect(ui->copy_links, &QPushButton::clicked, this, [=] {
         QStringList links;
-        for (const auto &[_, profile]: NekoGui::profileManager->profiles) {
-            if (profile->gid != ent->id) continue;
+        for (const auto &profile: ent->Profiles()) {
             links += profile->bean->ToShareLink();
         }
         QApplication::clipboard()->setText(links.join("\n"));
@@ -55,8 +60,7 @@ DialogEditGroup::DialogEditGroup(const std::shared_ptr<NekoGui::Group> &ent, QWi
     });
     connect(ui->copy_links_nkr, &QPushButton::clicked, this, [=] {
         QStringList links;
-        for (const auto &[_, profile]: NekoGui::profileManager->profiles) {
-            if (profile->gid != ent->id) continue;
+        for (const auto &profile: ent->Profiles()) {
             links += profile->bean->ToNekorayShareLink(profile->type);
         }
         QApplication::clipboard()->setText(links.join("\n"));

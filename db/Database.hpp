@@ -40,9 +40,17 @@ namespace NekoGui {
 
         void DeleteGroup(int gid);
 
-        std::shared_ptr<Group> GetGroup(int id);
+        [[nodiscard]] std::shared_ptr<Group> GetGroup(int id) const;
 
         std::shared_ptr<Group> CurrentGroup();
+
+        std::shared_ptr<Group> FindAllProfilesGroup();
+
+        void EnsureAllProfilesGroup();
+
+        void RefreshAllProfilesGroup();
+
+        [[nodiscard]] int DefaultAddGroupId() const;
 
         [[nodiscard]] QList<std::shared_ptr<ProxyEntity>> GetDuplicateProfiles(int gid);
 

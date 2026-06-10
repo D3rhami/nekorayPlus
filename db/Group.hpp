@@ -8,6 +8,7 @@ namespace NekoGui {
     public:
         int id = -1;
         bool archive = false;
+        bool all_profiles = false;
         bool skip_auto_update = false;
         QString name = "";
         QString url = "";
@@ -21,6 +22,11 @@ namespace NekoGui {
         QList<int> order;
 
         Group();
+
+        // Remove duplicate/invalid profile ids from order. Returns true if order changed.
+        bool NormalizeOrder();
+
+        void RebuildAggregateOrder();
 
         // 按 id 顺序
         [[nodiscard]] QList<std::shared_ptr<ProxyEntity>> Profiles() const;

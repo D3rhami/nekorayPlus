@@ -1,6 +1,8 @@
 #include "./ui_mainwindow.h"
 #include "mainwindow.h"
 
+#include <QSet>
+
 #include "fmt/Preset.hpp"
 #include "db/ProfileFilter.hpp"
 #include "db/ConfigBuilder.hpp"
@@ -161,7 +163,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // table UI
     ui->proxyListTable->callback_save_order = [=] {
         auto group = NekoGui::profileManager->CurrentGroup();
+        if (group == nullptr || group->all_profiles) return;
         group->order = ui->proxyListTable->order;
+        group->NormalizeOrder();
         group->Save();
     };
     ui->proxyListTable->refresh_data = [=](int id) { refresh_proxy_list_impl_refresh_data(id); };
@@ -506,6 +510,7 @@ void MainWindow::show_group(int gid) {
         NekoGui::dataStore->current_group = gid;
         NekoGui::dataStore->Save();
     }
+    if (group->all_profiles) group->RebuildAggregateOrder();
     ui->tabWidget->widget(groupId2TabIndex(gid))->layout()->addWidget(ui->proxyListTable);
 
     // 列宽是否可调
@@ -989,20 +994,29 @@ void MainWindow::refresh_proxy_list_impl(const int &id, GroupSortAction groupSor
         auto group = NekoGui::profileManager->CurrentGroup();
         QList<int> visibleIds;
         if (group != nullptr) {
+            QSet<int> groupProfileIds;
+            for (const auto &profile: group->Profiles()) {
+                groupProfileIds.insert(profile->id);
+            }
             for (const auto &[pid, profile]: NekoGui::profileManager->profiles) {
-                if (profile->gid != group->id) continue;
+                if (!groupProfileIds.contains(pid)) continue;
                 if (!NekoGui::ProxyEntity::IsShownInList(*profile)) {
                     ui->proxyListTable->keep_in_order_ids.insert(pid);
                 }
             }
+            QSet<int> orderSeen;
             for (auto pid: group->order) {
+                if (orderSeen.contains(pid)) continue;
+                if (!groupProfileIds.contains(pid)) continue;
                 auto profile = NekoGui::profileManager->GetProfile(pid);
-                if (profile == nullptr || profile->gid != group->id) continue;
+                if (profile == nullptr) continue;
                 if (!NekoGui::ProxyEntity::IsShownInList(*profile)) continue;
+                orderSeen.insert(pid);
                 visibleIds += pid;
             }
+            if (group->NormalizeOrder()) group->Save();
             for (const auto &[pid, profile]: NekoGui::profileManager->profiles) {
-                if (profile->gid != group->id) continue;
+                if (!groupProfileIds.contains(pid)) continue;
                 if (!NekoGui::ProxyEntity::IsShownInList(*profile)) continue;
                 if (visibleIds.contains(pid)) continue;
                 visibleIds += pid;
@@ -1463,8 +1477,7 @@ void MainWindow::on_menu_remove_unavailable_triggered() {
     if (group == nullptr) return;
 
     QList<std::shared_ptr<NekoGui::ProxyEntity>> out_del;
-    for (const auto &[_, profile]: NekoGui::profileManager->profiles) {
-        if (profile->gid != group->id) continue;
+    for (const auto &profile: group->Profiles()) {
         if (!NekoGui::ProxyEntity::IsShownInList(*profile)) continue;
         if (profile->latency < 0) out_del += profile;
     }
@@ -1482,11 +1495,14 @@ void MainWindow::on_menu_remove_unavailable_triggered() {
     if (out_del.length() > 0 &&
         QMessageBox::question(this, tr("Confirmation"), tr("Remove %1 item(s) ?").arg(out_del.length()) + "\n" + remove_display) == QMessageBox::StandardButton::Yes) {
         for (const auto &ent: out_del) {
-            group->order.removeAll(ent->id);
+            if (auto owner = NekoGui::profileManager->GetGroup(ent->gid); owner != nullptr) {
+                owner->order.removeAll(ent->id);
+                owner->Save();
+            }
             NekoGui::profileManager->DeleteProfile(ent->id);
         }
         if (!out_del.isEmpty()) {
-            group->Save();
+            NekoGui::profileManager->RefreshAllProfilesGroup();
             NekoGui::profileManager->SaveManager();
         }
         refresh_proxy_list();

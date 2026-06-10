@@ -6,6 +6,7 @@
 #include "GroupUpdater.hpp"
 
 #include <QInputDialog>
+#include <QSet>
 #include <QUrlQuery>
 
 #ifndef NKR_NO_YAML
@@ -584,17 +585,22 @@ namespace NekoGui_sub {
 
                 // sort according to order in remote
                 group->order = {};
+                QSet<int> orderSeen;
                 for (const auto &ent: rawUpdater->updated_order) {
+                    int pid;
                     auto deleted_index = update_del.indexOf(ent);
-                    if (deleted_index > 0) {
+                    if (deleted_index >= 0) {
                         if (deleted_index >= update_keep.count()) continue; // should not happen
-                        auto ent2 = update_keep[deleted_index];
-                        group->order.append(ent2->id);
+                        pid = update_keep[deleted_index]->id;
                     } else {
-                        group->order.append(ent->id);
+                        pid = ent->id;
                     }
+                    if (orderSeen.contains(pid)) continue;
+                    orderSeen.insert(pid);
+                    group->order.append(pid);
                 }
                 group->Save();
+                NekoGui::profileManager->RefreshAllProfilesGroup();
 
                 // cleanup
                 for (const auto &ent: out_all) {
@@ -622,7 +628,7 @@ namespace NekoGui_sub {
 
 bool UI_update_all_groups_Updating = false;
 
-#define should_skip_group(g) (g == nullptr || g->url.isEmpty() || g->archive || (onlyAllowed && g->skip_auto_update))
+#define should_skip_group(g) (g == nullptr || g->url.isEmpty() || g->archive || g->all_profiles || (onlyAllowed && g->skip_auto_update))
 
 void serialUpdateSubscription(const QList<int> &groupsTabOrder, int _order, bool onlyAllowed) {
     if (_order >= groupsTabOrder.size()) {

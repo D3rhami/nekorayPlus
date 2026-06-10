@@ -18,4 +18,4 @@ require (
 	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
 )
 
-replace github.com/matsuridayo/libneko v1.0.0 => ../../../libneko
+replace github.com/matsuridayo/libneko v1.0.0 => ../../libneko
