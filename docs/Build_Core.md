@@ -3,11 +3,11 @@
 ### 目录结构
 
 ```
-  | nekoray
+  | nekoray (repo root)
   |   go/cmd/*
-  | sing-box-extra
-  | sing-box
-  | ......
+  |   sing-box
+  |   sing-quic
+  |   libneko
 ```
 
 ### 常规构建

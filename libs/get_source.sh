@@ -4,7 +4,7 @@ set -e
 source libs/env_deploy.sh
 ENV_NEKORAY=1
 source libs/get_source_env.sh
-pushd ..
+cd "$SRC_ROOT"
 
 ####
 
@@ -13,7 +13,6 @@ if [ ! -d "sing-box" ]; then
 fi
 pushd sing-box
 git checkout "$COMMIT_SING_BOX"
-
 popd
 
 ####
@@ -23,7 +22,6 @@ if [ ! -d "sing-quic" ]; then
 fi
 pushd sing-quic
 git checkout "$COMMIT_SING_QUIC"
-
 popd
 
 ####
@@ -33,9 +31,4 @@ if [ ! -d "libneko" ]; then
 fi
 pushd libneko
 git checkout "$COMMIT_LIBNEKO"
-
-popd
-
-####
-
 popd
